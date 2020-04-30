@@ -1,0 +1,6 @@
+.eclcc
+*.log
+*.jpg
+*.png
+Test/.eclcc
+Test/*.log
