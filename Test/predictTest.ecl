@@ -39,7 +39,6 @@ generated := GNNI.Predict(generator, train_noise);
 //To make up for multiple images output
 gen_data := IMG.GenCorrect(generated);
 
-OUTPUT(gen_data);
 //Convert from tensor data to images by taking from file
 outputImage := IMG.TenstoImg(gen_data);
 
