@@ -86,3 +86,19 @@ For the implementation of GANs, weight transfer between neural network models is
 
 1) GANs can only run on hthor cluster and not on thor. 
 2) Due to a backend issue, 0.00000000001 is used instead of a 0. This isn't an issue, but a quirk, I would say.
+
+## Outputs of various models tested
+
+More models will be trained and outputs will be uploaded over time
+
+### Simple GAN output
+
+#### Epoch 2000
+
+![Coming soon]()
+
+### Deep Convolution GAN
+
+#### Epoch 2000
+
+![DCGAN Epoch 2000](Images/DCGAN/2000/Epoch_2000.png)
