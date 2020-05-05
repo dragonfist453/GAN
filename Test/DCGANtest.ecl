@@ -55,39 +55,37 @@ ldef_generator := ['''layers.Input(shape=(100,))''',
                         '''layers.Activation("tanh")''',
                         '''layers.Reshape((28,28,1))'''];
             
-compiledef_generator := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5))''';
-
-generator_def := Utils.makeLayerSpec(ldef_generator, compiledef_generator);
-
 //DISCRIMINATOR
 //Discriminator model definition information
 ldef_discriminator := ['''layers.Input(shape=(28, 28, 1))''',
-                                '''layers.Conv2D(32, kernel_size=3, strides=2, input_shape=(28, 28, 1), padding="same")''',
-                                '''layers.LeakyReLU(alpha=0.2)''',
-                                '''layers.Dropout(0.25)''',
-                                '''layers.Conv2D(64, kernel_size=3, strides=2, padding="same")''',
-                                '''layers.ZeroPadding2D(padding=((0,1),(0,1)))''',
-                                '''layers.BatchNormalization(momentum=0.8)''',
-                                '''layers.LeakyReLU(alpha=0.2)''',
-                                '''layers.Dropout(0.25)''',
-                                '''layers.Conv2D(128, kernel_size=3, strides=2, padding="same")''',
-                                '''layers.BatchNormalization(momentum=0.8)''',
-                                '''layers.LeakyReLU(alpha=0.2)''',
-                                '''layers.Dropout(0.25)''',
-                                '''layers.Conv2D(256, kernel_size=3, strides=1, padding="same")''',
-                                '''layers.BatchNormalization(momentum=0.8)''',
-                                '''layers.LeakyReLU(alpha=0.2)''',
-                                '''layers.Dropout(0.25)''',
-                                '''layers.Flatten()''',
-                                '''layers.Dense(1, activation="sigmoid")'''];
+                            '''layers.Conv2D(32, kernel_size=3, strides=2, input_shape=(28, 28, 1), padding="same")''',
+                            '''layers.LeakyReLU(alpha=0.2)''',
+                            '''layers.Dropout(0.25)''',
+                            '''layers.Conv2D(64, kernel_size=3, strides=2, padding="same")''',
+                            '''layers.ZeroPadding2D(padding=((0,1),(0,1)))''',
+                            '''layers.BatchNormalization(momentum=0.8)''',
+                            '''layers.LeakyReLU(alpha=0.2)''',
+                            '''layers.Dropout(0.25)''',
+                            '''layers.Conv2D(128, kernel_size=3, strides=2, padding="same")''',
+                            '''layers.BatchNormalization(momentum=0.8)''',
+                            '''layers.LeakyReLU(alpha=0.2)''',
+                            '''layers.Dropout(0.25)''',
+                            '''layers.Conv2D(256, kernel_size=3, strides=1, padding="same")''',
+                            '''layers.BatchNormalization(momentum=0.8)''',
+                            '''layers.LeakyReLU(alpha=0.2)''',
+                            '''layers.Dropout(0.25)''',
+                            '''layers.Flatten()''',
+                            '''layers.Dense(1, activation="sigmoid")'''];
 
-compiledef_discriminator := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5), metrics=['accuracy'])''';
+//Compile string for both generator and discriminator
+compiledef := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5))''';
 
-discriminator_def := Utils.makeLayerSpec(ldef_discriminator, compiledef_discriminator);
 
+//Get generator and discriminator models after training
+myDCGAN := GAN.Train(trainX, ldef_generator, ldef_discriminator, compiledef, batchSize, numEpochs, latentDim);
 
-//Get generator after training
-generator := GAN.train(trainX, generator_def, discriminator_def, batchSize, numEpochs);
+generator := myDCGAN.Generator;
+discriminator := myDCGAN.Discriminator;
 
 //Random set of normal data
 random_data := DATASET(outputRows*OutputCols*batchSize, TRANSFORM(TensData,
@@ -134,7 +132,7 @@ weights := GNNI.GetWeights(generator);
 
 //Store the info of the model for predictions
 modInfo := DATASET(1, TRANSFORM(Types.ModelInfo,
-                            SELF.layerspec := generator_def,
+                            SELF.layerspec := Utils.makeLayerSpec(ldef_generator, compiledef),
                             SELF.modWeights := weights,
                             SELF.desprayCommand := cmd,
                             SELF.outputRows := outputRows,

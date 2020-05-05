@@ -41,21 +41,17 @@ trainX := Tensor.R4.MakeTensor([0, imgRows, imgCols, 1], trainX0);
 //GENERATOR
 //Generator model definition information
 ldef_generator := ['''layers.Input(shape=(100,))''',
-                '''layers.Dense(256, input_dim=100)''',
-                '''layers.LeakyReLU(alpha=0.2)''',    
-                '''layers.BatchNormalization(momentum=0.8)''',
-                '''layers.Dense(512)''',
-                '''layers.LeakyReLU(alpha=0.2)''',
-                '''layers.BatchNormalization(momentum=0.8)''',
-                '''layers.Dense(1024)''',
-                '''layers.LeakyReLU(alpha=0.2)''',
-                '''layers.BatchNormalization(momentum=0.8)''',
-                '''layers.Dense(784,activation='tanh')''',
-                '''layers.Reshape((28,28,1))'''];
-            
-compiledef_generator := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5))''';
-
-generator_def := Utils.makeLayerSpec(ldef_generator, compiledef_generator);
+                    '''layers.Dense(256, input_dim=100)''',
+                    '''layers.LeakyReLU(alpha=0.2)''',    
+                    '''layers.BatchNormalization(momentum=0.8)''',
+                    '''layers.Dense(512)''',
+                    '''layers.LeakyReLU(alpha=0.2)''',
+                    '''layers.BatchNormalization(momentum=0.8)''',
+                    '''layers.Dense(1024)''',
+                    '''layers.LeakyReLU(alpha=0.2)''',
+                    '''layers.BatchNormalization(momentum=0.8)''',
+                    '''layers.Dense(784,activation="tanh")''',
+                    '''layers.Reshape((28,28,1))'''];
 
 //DISCRIMINATOR
 //Discriminator model definition information
@@ -65,15 +61,17 @@ ldef_discriminator := ['''layers.Input(shape=(28,28,1))''',
                         '''layers.LeakyReLU(alpha=0.2)''',
                         '''layers.Dense(256)''',
                         '''layers.LeakyReLU(alpha=0.2)''',
-                        '''layers.Dense(1,activation='sigmoid')'''];
+                        '''layers.Dense(1,activation="sigmoid")'''];
 
-compiledef_discriminator := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5), metrics=['accuracy'])''';
+//Compile string for both generator and discriminator
+compiledef := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5))''';
 
-discriminator_def := Utils.makeLayerSpec(ldef_discriminator, compiledef_discriminator);
 
+//Get generator and discriminator models after training
+myGAN := GAN.Train(trainX, ldef_generator, ldef_discriminator, compiledef, batchSize, numEpochs, latentDim);
 
-//Get generator after training
-generator := GAN.train(trainX, generator_def, discriminator_def, batchSize, numEpochs);
+generator := myGAN.Generator;
+discriminator := myGAN.Discriminator;
 
 //Random set of normal data
 random_data := DATASET(outputRows*OutputCols*batchSize, TRANSFORM(TensData,
@@ -120,7 +118,7 @@ weights := GNNI.GetWeights(generator);
 
 //Store the info of the model for predictions
 modInfo := DATASET(1, TRANSFORM(Types.ModelInfo,
-                            SELF.layerspec := generator_def,
+                            SELF.layerspec := Utils.makeLayerSpec(ldef_generator, compiledef),
                             SELF.modWeights := weights,
                             SELF.desprayCommand := cmd,
                             SELF.outputRows := outputRows,
