@@ -36,29 +36,6 @@ Assuming that HPCC cluster is up and running in your computer: -
 
 This should enable you to use the GAN train function given the dataset
 
-## A few more things
-
-The test folder in the same repository have files which have been used to test the network on. These ecl programs written using GAN bundle have also used a bundle going by the name IMG which helps in taking input of image data and also outputting images in an easier manner. 
-
-The prerequisites to the IMG module are: -
-1. Python3
-2. Numpy module
-3. OpenCV on Python3
-4. Matplotlib on Python3
-
-These are used to take input and get output in IMG module. 
-
-To install IMG module, clone the [IMG module](https://github.com/dragonfist453/IMG) repository. Once cloned, run the below command
-
-        ecl bundle install IMG
-
-This should enable you to run the test files to make sure your setup is complete. For a faster execution of the test, run the file at
-
-        numEpochs := 1
-        numRecords := 1000
-
-This will execute 1 epoch, with no significant training. If the workunit succeeds, it means that the setup was perfect. 
-
 ## Helpful Test files
 
 1. **simpleGANtest.ecl**

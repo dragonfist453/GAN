@@ -1,5 +1,5 @@
 IMPORT GNN.GNNI;
-IMPORT IMG.IMG;
+IMPORT GNN.Image;
 IMPORT GNN.Tensor;
 IMPORT GAN.Types;
 IMPORT STD;
@@ -37,13 +37,13 @@ train_noise := Tensor.R4.MakeTensor([0,latentDim], random_data);
 generated := GNNI.Predict(generator, train_noise);
 
 //To make up for multiple images output
-gen_data := IMG.GenCorrect(generated);
+gen_data := Tensor.R4.GetData(generated);
 
 //Convert from tensor data to images by taking from file
-outputImage := IMG.TenstoImg(gen_data);
+outputImage := Image.TenstoImg(gen_data);
 
 //Convert image data to jpg format to despray
-mnistgrid := IMG.OutputGrid(outputImage, outputRows, outputCols, numEpochs);
+mnistgrid := Image.OutputGrid(outputImage, outputRows, outputCols, 'Epoch_'+(STRING)numEpochs);
 
 //Output the grid image to despray as a PNG using prefix filename,filesize
 img_out := OUTPUT(mnistgrid, ,'~GAN::output_image', OVERWRITE);

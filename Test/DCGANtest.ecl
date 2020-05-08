@@ -3,11 +3,11 @@ IMPORT GNN.Tensor;
 IMPORT Std.System.Thorlib;
 IMPORT Std.System.Log AS Syslog;
 IMPORT Std;
-IMPORT IMG.IMG;
 IMPORT GAN.GAN;
 IMPORT GAN.Utils;
 IMPORT GNN.GNNI;
 IMPORT GAN.Types;
+IMPORT GNN.Image;
 t_Tensor := Tensor.R4.t_Tensor;
 TensData := Tensor.R4.TensData;
 
@@ -16,10 +16,6 @@ RAND_MAX := POWER(2,8) - 1;
 RAND_MAX_2 := RAND_MAX / 2;
 
 //Train data definitions
-imgRows := 28;
-imgCols := 28;
-imgChannels := 1;
-imgSize := imgRows * imgCols;
 latentDim := 100;
 batchSize := 100;
 numEpochs := 2000;
@@ -27,16 +23,20 @@ outputRows := 5;
 outputCols := 5;
 numRecords := 60000;
 
-//Take MNIST dataset using IMG module
-mnist_train_images := IMG.MNIST_train_image()[..numRecords];
+//Take MNIST dataset using GNN.Image module
+mnist_train_images := Image.MNIST.Get_train_images('~test::mnist_train_images')[..numRecords];
 
-//Tensor dataset having image data normalised to range of -1 to 1
-trainX0 := NORMALIZE(mnist_train_images, imgSize, TRANSFORM(TensData,
-                            SELF.indexes := [LEFT.id, (COUNTER-1) DIV 28+1, (COUNTER-1)%28+1, 1],
-                            SELF.value := ( (REAL) (>UNSIGNED1<) LEFT.image[counter] )/127.5 - 1 )); 
-                     
+//Extract dimensions
+imgDims := mnist_train_images[1].imgDims;
+imgRows := imgDims[1];
+imgCols := imgDims[2];
+imgChannels := imgDims[3];
+
+//Convert image to tensor with GNN.Image module
+trainX0 := Image.ImgtoTens(mnist_train_images); 
+                                           
 //Builds tensors for the neural network
-trainX := Tensor.R4.MakeTensor([0, imgRows, imgCols, 1], trainX0); 
+trainX := Tensor.R4.MakeTensor([0, imgRows, imgCols, imgChannels], trainX0); 
 
 //GENERATOR
 //Generator model definition information
@@ -98,17 +98,17 @@ train_noise := Tensor.R4.MakeTensor([0,latentDim], random_data);
 //Predict an image from noise
 generated := GNNI.Predict(generator, train_noise);
 
-//To make up for multiple images output
-gen_data := IMG.GenCorrect(generated);
+//To get generator data as output
+gen_data := Tensor.R4.GetData(generated);
 
 //Outputs the tensor onto a file, so the graphs don't repeat
 OUTPUT(gen_data, ,'~GAN::output_tensdata', OVERWRITE);
 
 //Convert from tensor data to images by taking from file
-outputImage := IMG.TenstoImg(DATASET('~GAN::output_tensdata',TensData,FLAT ));
+outputImage := Image.TenstoImg(DATASET('~GAN::output_tensdata',TensData,FLAT ));
 
 //Convert image data to jpg format to despray
-mnistgrid := IMG.OutputGrid(outputImage, outputRows, outputCols, numEpochs);
+mnistgrid := Image.OutputGrid(outputImage, outputRows, outputCols, 'Epoch_'+(String)numEpochs);
 
 //Output the grid image to despray as a PNG using prefix filename,filesize
 img_out := OUTPUT(mnistgrid, ,'~GAN::output_image', OVERWRITE);
