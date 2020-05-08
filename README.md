@@ -6,7 +6,7 @@ This module implements GANs using the [Generalized Neural Network bundle](https:
 1) Read the dataset and convert into appropriate tensor using GNN.Tensor functions.
 2) Define the Generator and Discriminator model obeying the rules of GNN interface.
 3) Call GAN.train() with the parameters defined below to train the GANs for set number of Epochs and given batchSize
-4) Use returned generator to predict using GNN functions
+4) Use returned generator to predict using GNN functions and returned discriminator to distinguish fake and real data
 5) Output the predicted values as required for understanding
 
 Refer to Test/simpleGANtest.ecl for a better understanding of the working. 
@@ -97,7 +97,10 @@ More models will be trained and outputs will be uploaded over time
 #### Epoch 2000
 
 ![DCGAN Epoch 2000](Images/DCGAN/2000/Epoch_2000.png)
+<<<<<<< HEAD
 
 #### Epoch 3000
 
 ![DCGAN Epoch 3000](Images/DCGAN/3000/Epoch_3000.png)
+=======
+>>>>>>> fff015c456ddaaeafc28a687b3173a272155c36d
