@@ -82,11 +82,6 @@ This will execute 1 epoch, with no significant training. If the workunit succeed
 
 For the implementation of GANs, weight transfer between neural network models is used so that the models stay connected and are able to train adversarially. This is achieved in Python or JavaScript using objects, but in ECL, weights were transferred between models to train successfully.
 
-## Issues existing
-
-1) GANs can only run on hthor cluster and not on thor. 
-2) Due to a backend issue, 0.00000000001 is used instead of a 0. This isn't an issue, but a quirk, I would say.
-
 ## Outputs of various models tested
 
 More models will be trained and outputs will be uploaded over time
@@ -102,3 +97,7 @@ More models will be trained and outputs will be uploaded over time
 #### Epoch 2000
 
 ![DCGAN Epoch 2000](Images/DCGAN/2000/Epoch_2000.png)
+
+#### Epoch 3000
+
+![DCGAN Epoch 3000](Images/DCGAN/3000/Epoch_3000.png)
