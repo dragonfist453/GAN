@@ -97,10 +97,7 @@ More models will be trained and outputs will be uploaded over time
 #### Epoch 2000
 
 ![DCGAN Epoch 2000](Images/DCGAN/2000/Epoch_2000.png)
-<<<<<<< HEAD
 
 #### Epoch 3000
 
 ![DCGAN Epoch 3000](Images/DCGAN/3000/Epoch_3000.png)
-=======
->>>>>>> fff015c456ddaaeafc28a687b3173a272155c36d
