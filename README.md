@@ -78,3 +78,7 @@ More models will be trained and outputs will be uploaded over time
 #### Epoch 3000
 
 ![DCGAN Epoch 3000](Images/DCGAN/3000/Epoch_3000.png)
+
+#### Epoch 4000
+
+![DCGAN Epoch 4000](Images/DCGAN/4000/Epoch_4000.png)
