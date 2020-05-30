@@ -5,8 +5,11 @@ IMPORT GNN.Types;
 IMPORT GNN.GNNI;
 IMPORT GNN.Internal AS Int;
 IMPORT Std.System.Log AS Syslog;
+IMPORT Std.System.Thorlib;
 IMPORT GAN.Types;
 IMPORT GAN.Utils;
+nNodes := Thorlib.nodes();
+nodeId := Thorlib.node();
 t_Tensor := Tensor.R4.t_Tensor;
 TensData := Tensor.R4.TensData;
 LayerSpec := Types.LayerSpec;
@@ -80,14 +83,15 @@ EXPORT GAN := MODULE
 			combined := GNNI.DefineModel(session, combined_ldef, compiledef);
 
 			//Dataset of 1s for classification
-			valid_data := DATASET(batchSize, TRANSFORM(TensData,
+			//Repeated nNodes times for each node to process
+			valid_data := DATASET(batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [COUNTER, 1],
 					SELF.value := 1), LOCAL);
 			valid := Tensor.R4.MakeTensor([0,1],valid_data);
 
 			//Please note: 0.00000001 was used instead of 0 as 0 wasn't read as a tensor data in the backend
 			//Dataset of 0s for classification
-			fake_data := DATASET(batchSize, TRANSFORM(TensData,
+			fake_data := DATASET(batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [COUNTER, 1],
 					SELF.value := 0.00000001), LOCAL);
 			fake := Tensor.R4.MakeTensor([0,1],fake_data);
@@ -97,7 +101,7 @@ EXPORT GAN := MODULE
 
 			//Fooling ECL to generate unique random datasets by passing unique integers which do nothing
 			DATASET(TensData) makeRandom(UNSIGNED a) := FUNCTION
-				reslt := DATASET(latentDim*batchSize, TRANSFORM(TensData,
+				reslt := DATASET(latentDim*batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [(COUNTER-1) DIV latentDim + 1, (COUNTER-1)%latentDim + 1],
 					SELF.value := ((RANDOM() % RAND_MAX) / RAND_MAX_2) - 1 * a / a), LOCAL);
 				RETURN reslt;
@@ -108,7 +112,7 @@ EXPORT GAN := MODULE
 
 				//Selecting random batch of images
 				//Random position in Tensor which is (batchSize) less than COUNT(input)
-				batchPos := RANDOM()%(recordCount - batchSize);
+				batchPos := RANDOM()%(recordCount/nNodes - batchSize);
 
 				//Extract (batchSize) tensors starting from a random batchPos from the tensor input. Now we have a random input images of (batchSize) rows.
 				X_dat := int.TensExtract(input, batchPos, batchSize);
@@ -158,7 +162,6 @@ EXPORT GAN := MODULE
 				//Get discriminator weights, add 20 to it, change discriminator weights of combined model, set combined weights
 				updateddisWts := GNNI.GetWeights(discriminator3);
 				newdisWts := PROJECT(updateddisWts, TRANSFORM(t_Tensor,
-					SELF.wi := LEFT.wi + gen_wts_id,
 					SELF := LEFT
 					));
 				comWts := SORT(wts(wi <= gen_wts_id) + newdisWts(wi > gen_wts_id), wi, sliceid, LOCAL);
