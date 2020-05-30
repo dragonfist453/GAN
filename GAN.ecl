@@ -6,6 +6,7 @@ IMPORT GNN.GNNI;
 IMPORT GNN.Internal AS Int;
 IMPORT Std.System.Log AS Syslog;
 IMPORT Std.System.Thorlib;
+IMPORT Std.Str;
 IMPORT GAN.Types;
 IMPORT GAN.Utils;
 nNodes := Thorlib.nodes();
@@ -76,8 +77,18 @@ EXPORT GAN := MODULE
 			//Define discriminator network
 			discriminator := GNNI.DefineModel(session, discriminator_ldef, compiledef); //Discriminator model definition
 
+			//Convert SET of strings to dataset to iterate over and make trainable false
+			dis_temp := DATASET(discriminator_ldef[2..], {STRING layer});
+
+			//Project this with a transform to remove suffix bracket and add non-trainable feature
+			dis_notrain := PROJECT(dis_temp, TRANSFORM(RECORDOF(LEFT),
+												SELF.layer := IF(Str.EndsWith(Str.RemoveSuffix(LEFT.layer, ')'), '('),  //If it ends with a ( after removing ), then the function has no parameter
+																Str.RemoveSuffix(LEFT.layer, ')') + 'trainable=False)', //If no parameter, no comma
+																Str.RemoveSuffix(LEFT.layer, ')') + ', trainable=False)') //If parameter exists, comma is required
+											));
+
 			//Get combined layers definition
-			combined_ldef := generator_ldef + discriminator_ldef[2..];
+			combined_ldef := generator_ldef + SET(dis_notrain, layer);
 
 			//Define combined functional network
 			combined := GNNI.DefineModel(session, combined_ldef, compiledef);
@@ -86,14 +97,14 @@ EXPORT GAN := MODULE
 			//Repeated nNodes times for each node to process
 			valid_data := DATASET(batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [COUNTER, 1],
-					SELF.value := 1), LOCAL);
+					SELF.value := 1));
 			valid := Tensor.R4.MakeTensor([0,1],valid_data);
 
 			//Please note: 0.00000001 was used instead of 0 as 0 wasn't read as a tensor data in the backend
 			//Dataset of 0s for classification
 			fake_data := DATASET(batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [COUNTER, 1],
-					SELF.value := 0.00000001), LOCAL);
+					SELF.value := 0.00000001));
 			fake := Tensor.R4.MakeTensor([0,1],fake_data);
 
 			//Get only initial combined weights
@@ -103,7 +114,7 @@ EXPORT GAN := MODULE
 			DATASET(TensData) makeRandom(UNSIGNED a) := FUNCTION
 				reslt := DATASET(latentDim*batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [(COUNTER-1) DIV latentDim + 1, (COUNTER-1)%latentDim + 1],
-					SELF.value := ((RANDOM() % RAND_MAX) / RAND_MAX_2) - 1 * a / a), LOCAL);
+					SELF.value := ((RANDOM() % RAND_MAX) / RAND_MAX_2) - 1 * a / a));
 				RETURN reslt;
 			END; 
 
@@ -127,8 +138,8 @@ EXPORT GAN := MODULE
 				loopGenerator := generator + (epochNum - 1);
 
 				//Split weights accordingly. Generator layer <= gen_wts_id. Discriminator layers > gen_wts_id. Discriminator must be subtracted by gen_wts_id to get its proper weights
-				genWts := SORT(wts(wi <= gen_wts_id), wi, sliceid, LOCAL);
-				splitdisWts := SORT(wts(wi > gen_wts_id), wi, sliceid, LOCAL);
+				genWts := SORT(wts(wi <= (Tensor.t_WorkItem) gen_wts_id), wi, sliceid, LOCAL);
+				splitdisWts := SORT(wts(wi > (Tensor.t_WorkItem) gen_wts_id), wi, sliceid, LOCAL);
 				diswts := PROJECT(splitdisWts, TRANSFORM(t_Tensor,
 					SELF.wi := LEFT.wi - gen_wts_id,
 					SELF := LEFT
@@ -162,9 +173,10 @@ EXPORT GAN := MODULE
 				//Get discriminator weights, add 20 to it, change discriminator weights of combined model, set combined weights
 				updateddisWts := GNNI.GetWeights(discriminator3);
 				newdisWts := PROJECT(updateddisWts, TRANSFORM(t_Tensor,
-					SELF := LEFT
-					));
-				comWts := SORT(wts(wi <= gen_wts_id) + newdisWts(wi > gen_wts_id), wi, sliceid, LOCAL);
+									SELF.wi := LEFT.wi + gen_wts_id,
+									SELF := LEFT
+									));
+				comWts := SORT(wts(wi <= (Tensor.t_WorkItem) gen_wts_id) + newdisWts(wi > (Tensor.t_WorkItem) gen_wts_id), wi, sliceid, LOCAL);
 				combined1 := GNNI.SetWeights(loopCombined, comWts);
 
 				//Fit combined model

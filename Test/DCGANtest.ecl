@@ -113,7 +113,7 @@ mnistgrid := Image.OutputGrid(outputImage, outputRows, outputCols, 'Epoch_'+(Str
 img_out := OUTPUT(mnistgrid, ,'~GAN::output_image', OVERWRITE);
 
 //Despray variables
-serv := 'server=localhost:8010 ';
+serv := 'server=http://172.16.2.240:8010 ';
 over := 'overwrite=1 ';
 action  := 'action=despray ';
 dstip   := 'dstip=172.16.2.240 ';

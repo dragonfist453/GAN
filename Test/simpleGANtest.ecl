@@ -100,10 +100,10 @@ mnistgrid := Image.OutputGrid(outputImage, outputRows, outputCols, 'Epoch_'+(Str
 img_out := OUTPUT(mnistgrid, ,'~GAN::output_image', OVERWRITE);
 
 //Despray variables
-serv := 'server=localhost:8010 ';
+serv := 'server=http://172.16.2.240:8010 ';
 over := 'overwrite=1 ';
 action  := 'action=despray ';
-dstip   := 'dstip=192.168.86.149 ';
+dstip   := 'dstip=172.16.2.240 ';
 dstfile := 'dstfile=/var/lib/HPCCSystems/mydropzone/*.png ';
 srcname := 'srcname=~gan::output_image ';
 splitprefix := 'splitprefix=filename,filesize ';
