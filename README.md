@@ -69,7 +69,16 @@ More models will be trained and outputs will be uploaded over time
 
 ![Coming soon](Images/GAN/2000/Epoch_2000.png)
 
-### Deep Convolution GAN
+#### Epoch 3000
+
+![Coming soon](Images/DCGAN/3000/Epoch_3000.png)
+
+#### Epoch 4000
+
+![Coming soon](Images/DCGAN/4000/Epoch_4000.png)
+
+
+### Deep Convolution GAN output
 
 #### Epoch 2000
 
@@ -77,8 +86,8 @@ More models will be trained and outputs will be uploaded over time
 
 #### Epoch 3000
 
-![DCGAN Epoch 3000](Images/DCGAN/3000/Epoch_3000.png)
+![Coming soon](Images/DCGAN/3000/Epoch_3000.png)
 
 #### Epoch 4000
 
-![DCGAN Epoch 4000](Images/DCGAN/4000/Epoch_4000.png)
+![Coming soon](Images/DCGAN/4000/Epoch_4000.png)
