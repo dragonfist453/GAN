@@ -1,6 +1,6 @@
 # Generative Adversarial Networks Bundle
 
-Generative Adversarial Networks are a pair of models which behave as adversaries to each other in order to competeand learn from experience to generate artificial data. This data could be anything; audio, text, images, numerical data.
+Generative Adversarial Networks are a pair of models which behave as adversaries to each other in order to compete and learn from experience to generate artificial data. This data could be anything; audio, text, images or numerical data.
 
 This module implements GANs using the [Generalized Neural Network bundle](https://github.com/hpcc-systems/GNN). It can be used in various ways according to how the input is given and the output desired. Typically, the program flow goes as follows: -
 1) Read the dataset and convert into appropriate tensor using GNN.Tensor functions.
@@ -9,7 +9,7 @@ This module implements GANs using the [Generalized Neural Network bundle](https:
 4) Use returned generator to predict using GNN functions and returned discriminator to distinguish fake and real data
 5) Output the predicted values as required for understanding
 
-Refer to Test/simpleGANtest.ecl for a better understanding of the working. 
+Refer to Test/GANtest.ecl for a better understanding of the working. 
 
 ## How to use
 
@@ -18,27 +18,28 @@ Assuming that HPCC cluster is up and running in your computer: -
 
         ecl bundle install https://github.com/hpcc-systems/ML_Core.git
 
-2) Make sure that Python3 and Tensorflow is installed on each server running HPCC systems platform software. You may install tensorflow by running the below.
-
-        pip install tensorflow
-
-3) Install Generalised Neural Networks bundle by running the below in your terminal or command prompt.
+2) Install Generalised Neural Networks bundle by running the below in your terminal or command prompt.
         
         ecl bundle install https://github.com/hpcc-systems/GNN.git
+
+
+3) To make sure and also install the required python3 dependencies, please run the Setup.ecl file by running the below command.
+        
+        ecl run thor Setup.ecl
 
 4) Now that the dependencies have been taken care of, install the current bundle by cloning this repository and running the below command
 
         ecl bundle install GAN
 
-5) Until further updates to GNN for a certain weights issue, it is advised to run the model on the hthor cluster. It works well in hthor, but in thor, there are a few issue that are needed to be resolved. You run it by executing the following command if HPCC systems platform is running on server: -
+5) You run it by executing the following command if HPCC systems platform is running on server: -
 
-        ecl run hthor <filename>
+        ecl run thor <filename>
 
-This should enable you to use the GAN train function given the dataset
+This should enable you to use the GAN train function given the dataset appropriately.
 
 ## Helpful Test files
 
-1. **simpleGANtest.ecl**
+1. **GANtest.ecl**
 
     This test file tries to generate MNIST dataset using mostly Dense layers. This is the most primitive kind of GAN and it shows that the GAN works. The main working file is this. 
     End of this file also has a statement which enables you to run predict as many times as required separately, without requiring you to run the whole program again. 
@@ -55,13 +56,8 @@ This should enable you to use the GAN train function given the dataset
 
     This test file is a sort of reference for how models are being saved. For any further type of GAN developed, saveTest.ecl may be referred to see how the model is saved easily. 
 
-## Design
-
-For the implementation of GANs, weight transfer between neural network models is used so that the models stay connected and are able to train adversarially. This is achieved in Python or JavaScript using objects, but in ECL, weights were transferred between models to train successfully.
 
 ## Outputs of various models tested
-
-More models will be trained and outputs will be uploaded over time
 
 ### Simple GAN output
 
