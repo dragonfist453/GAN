@@ -1,14 +1,13 @@
 IMPORT Python3 AS Python;
 IMPORT GNN.Tensor;
 IMPORT GNN.Internal.Types AS iTypes;
-IMPORT GNN.Types;
 IMPORT GNN.GNNI;
 IMPORT GNN.Internal AS Int;
 IMPORT Std.System.Log AS Syslog;
 IMPORT Std.System.Thorlib;
 IMPORT Std.Str;
-IMPORT GAN.Types;
-IMPORT GAN.Utils;
+IMPORT $.Types;
+IMPORT $.Utils;
 nNodes := Thorlib.nodes();
 nodeId := Thorlib.node();
 t_Tensor := Tensor.R4.t_Tensor;

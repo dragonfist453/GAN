@@ -1,12 +1,12 @@
-IMPORT Python3 AS Python;
+﻿IMPORT Python3 AS Python;
 IMPORT GNN.Tensor;
-IMPORT Std.System.Thorlib;
 IMPORT Std.System.Log AS Syslog;
 IMPORT Std;
+IMPORT $.^ as GAN;
 IMPORT GAN.GAN;
-IMPORT GAN.Utils;
+IMPORT $.^.Utils;
 IMPORT GNN.GNNI;
-IMPORT GAN.Types;
+IMPORT $.^.Types;
 IMPORT GNN.Image;
 t_Tensor := Tensor.R4.t_Tensor;
 TensData := Tensor.R4.TensData;
@@ -18,7 +18,7 @@ RAND_MAX_2 := RAND_MAX / 2;
 //Train data definitions
 latentDim := 100;
 batchSize := 100;
-numEpochs := 2000;
+numEpochs := 1;
 outputRows := 5;
 outputCols := 5;
 numRecords := 60000;

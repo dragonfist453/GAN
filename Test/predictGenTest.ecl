@@ -1,7 +1,7 @@
-IMPORT GNN.GNNI;
+﻿IMPORT GNN.GNNI;
 IMPORT GNN.Image;
 IMPORT GNN.Tensor;
-IMPORT GAN.Types;
+IMPORT $.^.Types;
 IMPORT STD;
 TensData := Tensor.R4.TensData;
 t_Tensor := Tensor.R4.t_Tensor;
@@ -9,7 +9,7 @@ RAND_MAX := POWER(2,8) - 1;
 RAND_MAX_2 := RAND_MAX / 2;
 
 
-savedModel := DATASET('~DCGAN::GeneratorInfo',Types.ModelInfo,FLAT );
+savedModel := DATASET('~GAN::GeneratorInfo',Types.ModelInfo,FLAT );
 savedlayerDef := savedModel[1].layerspec[1].layerDef;
 savedCompilestr := savedModel[1].layerspec[1].compileDef;
 savedWeights := savedModel[1].modWeights;

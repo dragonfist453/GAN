@@ -1,6 +1,6 @@
 IMPORT Python3 as Python;
 IMPORT GNN.Tensor;
-IMPORT GAN.Types;
+IMPORT $.Types;
 TensData := Tensor.R4.TensData;
 LayerSpec := Types.LayerSpec;
 

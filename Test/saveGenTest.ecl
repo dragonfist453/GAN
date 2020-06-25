@@ -1,6 +1,6 @@
 IMPORT GNN.GNNI;
-IMPORT GAN.Types;
-IMPORT GAN.Utils;
+IMPORT $.^.Types;
+IMPORT $.^.Utils;
 
 //Despray variables
 serv := 'server=localhost:8010 ';
