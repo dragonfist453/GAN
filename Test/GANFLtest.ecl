@@ -1,15 +1,17 @@
-﻿IMPORT Python3 AS Python;
+IMPORT Python3 AS Python;
 IMPORT GNN.Tensor;
 IMPORT Std.System.Log AS Syslog;
 IMPORT Std;
 IMPORT $.^ as GAN;
-IMPORT GAN.GAN;
+IMPORT GAN.GAN_FL;
 IMPORT $.^.Utils;
 IMPORT GNN.GNNI;
 IMPORT $.^.Types;
 IMPORT GNN.Image;
+IMPORT GNN.Types as GNNTypes;
 t_Tensor := Tensor.R4.t_Tensor;
 TensData := Tensor.R4.TensData;
+FuncLayerDef := GNNTypes.FuncLayerDef;
 
 #option('outputLimit',2000);
 RAND_MAX := POWER(2,8) - 1;
@@ -18,13 +20,13 @@ RAND_MAX_2 := RAND_MAX / 2;
 //Train data definitions
 latentDim := 100;
 batchSize := 100;
-numEpochs := 2000;
+numEpochs := 10;
 outputRows := 5;
 outputCols := 5;
-numRecords := 60000;
+numRecords := 500;
 
 //Take MNIST dataset using GNN.Image module
-mnist_train_images := Image.MNIST.Get_train_images('~test::mnist_train_images')[..numRecords];
+mnist_train_images := Image.MNIST.Get_train_images('~mnist::images')[..numRecords];
 
 //Extract dimensions
 imgDims := mnist_train_images[1].imgDims;
@@ -40,35 +42,37 @@ trainX := Tensor.R4.MakeTensor([0, imgRows, imgCols, imgChannels], trainX0);
 
 //GENERATOR
 //Generator model definition information
-ldef_generator := ['''layers.Input(shape=(100,))''',
-                    '''layers.Dense(256, input_dim=100)''',
-                    '''layers.LeakyReLU(alpha=0.2)''',    
-                    '''layers.BatchNormalization(momentum=0.8)''',
-                    '''layers.Dense(512)''',
-                    '''layers.LeakyReLU(alpha=0.2)''',
-                    '''layers.BatchNormalization(momentum=0.8)''',
-                    '''layers.Dense(1024)''',
-                    '''layers.LeakyReLU(alpha=0.2)''',
-                    '''layers.BatchNormalization(momentum=0.8)''',
-                    '''layers.Dense(784,activation="tanh")''',
-                    '''layers.Reshape((28,28,1))'''];
+ldef_generator :=  DATASET([{'input_g','''layers.Input(shape=(100,))''',[]},              //Input of Generator
+                        {'g1','''layers.Dense(256, input_dim=100)''',['input_g']},        //Generator layer 1
+                        {'g2','''layers.LeakyReLU(alpha=0.2)''',['g1']},                //Generator layer 2
+                        {'g3','''layers.BatchNormalization(momentum=0.8)''',['g2']},    //Generator layer 3
+                        {'g4','''layers.Dense(512)''',['g3']},                          //Generator layer 4
+                        {'g5','''layers.LeakyReLU(alpha=0.2)''',['g4']},                //Generator layer 5
+                        {'g6','''layers.BatchNormalization(momentum=0.8)''',['g5']},    //Generator layer 6
+                        {'g7','''layers.Dense(1024)''',['g6']},                         //Generator layer 7
+                        {'g8','''layers.LeakyReLU(alpha=0.2)''',['g7']},                //Generator layer 8
+                        {'g9','''layers.BatchNormalization(momentum=0.8)''',['g8']},    //Generator layer 9
+                        {'g10','''layers.Dense(784,activation='tanh')''',['g9']},       //Generator layer 10
+                        {'output_g','''layers.Reshape((28,28,1))''',['g10']}],                //Generate output
+                        FuncLayerDef);
 
 //DISCRIMINATOR
 //Discriminator model definition information
-ldef_discriminator := ['''layers.Input(shape=(28,28,1))''',
-                        '''layers.Flatten(input_shape=(28,28,1))''',
-                        '''layers.Dense(512)''',
-                        '''layers.LeakyReLU(alpha=0.2)''',
-                        '''layers.Dense(256)''',
-                        '''layers.LeakyReLU(alpha=0.2)''',
-                        '''layers.Dense(1,activation="sigmoid")'''];
+ldef_discriminator := DATASET([{'input_d','''layers.Input(shape=(28,28,1))''',[]},   //Input of image from Generator
+                        {'d1','''layers.Flatten(input_shape=(28,28,1))''',['input_d']}, //Discriminator layer 1
+                        {'d2','''layers.Dense(512)''',['d1']},                          //Discriminator layer 2
+                        {'d3','''layers.LeakyReLU(alpha=0.2)''',['d2']},                //Discriminator layer 3
+                        {'d4','''layers.Dense(256)''',['d3']},                          //Discriminator layer 4
+                        {'d5','''layers.LeakyReLU(alpha=0.2)''',['d4']},                //Discriminator layer 5
+                        {'output_d','''layers.Dense(1,activation='sigmoid')''',['d5']}],//Output of Discriminator, valid image or not
+                        FuncLayerDef);
 
 //Compile string for both generator and discriminator
 compiledef := '''compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(0.0002, 0.5))''';
 
 
 //Get generator and discriminator models after training
-myGAN := GAN.Train(trainX, ldef_generator, ldef_discriminator, compiledef, batchSize, numEpochs, latentDim);
+myGAN := GAN_FL.Train(trainX, ldef_generator, ldef_discriminator, compiledef, batchSize, numEpochs, latentDim);
 
 generator := myGAN.Generator;
 discriminator := myGAN.Discriminator;
@@ -115,7 +119,7 @@ SEQUENTIAL(img_out, despray_image);
 
 //Get the weights of the trained generator
 weights := GNNI.GetWeights(generator);
-
+/*
 //Store the info of the model for predictions
 modInfo := DATASET(1, TRANSFORM(Types.ModelInfo,
                             SELF.layerspec := Utils.makeLayerSpec(ldef_generator, compiledef),
@@ -129,3 +133,4 @@ modInfo := DATASET(1, TRANSFORM(Types.ModelInfo,
                             ));
 
 OUTPUT(modInfo, ,'~GAN::GeneratorInfo', OVERWRITE);
+*/
