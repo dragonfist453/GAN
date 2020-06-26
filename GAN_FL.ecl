@@ -49,7 +49,8 @@ EXPORT GAN_FL := MODULE
 		* Generator could be used to generate data. 
 		* Discriminator could be used to distinguish fake data from real data due to the training received.
 		*/
-	EXPORT Train(DATASET(t_Tensor) input,
+	EXPORT Train(DATASET(t_Tensor) X_train,
+								DATASET(t_Tensor) Y_train,
 								DATASET(FuncLayerDef) generator_ldef,
 								DATASET(FuncLayerDef) discriminator_ldef,
 								STRING compiledef,
@@ -64,21 +65,14 @@ EXPORT GAN_FL := MODULE
 			RAND_MAX_2 := RAND_MAX / 2;
 
 			//Gets the number of records in the tensor
-			recordCount := TENSOR.R4.GetRecordCount(input);
+			recordCount := TENSOR.R4.GetRecordCount(X_train);
 
 			//Start session for GAN
 			session := GNNI.GetSession();
 
 			//Filtering generator inputs and outputs using their names
-			gen_inputs := SET(PROJECT(generator_ldef, TRANSFORM({String layerName, BOOLEAN required},
-                                                SELF.layerName := LEFT.layerName,
-                                                SELF.required := IF(Str.StartsWith(LEFT.layerName,'input_g'), TRUE, FALSE)
-                                                ))(required=TRUE), layerName);
-			
-			gen_outputs := SET(PROJECT(generator_ldef, TRANSFORM({String layerName, BOOLEAN required},
-                                                SELF.layerName := LEFT.layerName,
-                                                SELF.required := IF(Str.StartsWith(LEFT.layerName,'output_g'), TRUE, FALSE)
-                                                ))(required=TRUE), layerName);
+			gen_inputs := SET(generator_ldef(Str.StartsWith(layerName,'input_g')), layerName);
+			gen_outputs := SET(generator_ldef(Str.StartsWith(layerName,'output_g')), layerName);
 
 			//Define generator network
 			generator := GNNI.DefineFuncModel(session, generator_ldef, gen_inputs, gen_outputs, compiledef); //Generator model definition
@@ -87,31 +81,29 @@ EXPORT GAN_FL := MODULE
 			gen_wts_id := MAX(GNNI.GetWeights(generator), wi);
 
 			//Filtering generator inputs and outputs using their names
-			dis_inputs := SET(PROJECT(discriminator_ldef, TRANSFORM({String layerName, BOOLEAN required},
-                                                SELF.layerName := LEFT.layerName,
-                                                SELF.required := IF(Str.StartsWith(LEFT.layerName,'input_d'), TRUE, FALSE)
-                                                ))(required=TRUE), layerName);
-			
-			dis_outputs := SET(PROJECT(discriminator_ldef, TRANSFORM({String layerName, BOOLEAN required},
-                                                SELF.layerName := LEFT.layerName,
-                                                SELF.required := IF(Str.StartsWith(LEFT.layerName,'output_d'), TRUE, FALSE)
-                                                ))(required=TRUE), layerName);
+			dis_inputs := SET(discriminator_ldef(Str.StartsWith(layerName,'input_d')), layerName);
+			dis_outputs := SET(discriminator_ldef(Str.StartsWith(layerName,'output_d')), layerName);
 
-			//Define discriminator network
+			//Define generator network
 			discriminator := GNNI.DefineFuncModel(session, discriminator_ldef, dis_inputs, dis_outputs, compiledef); //Discriminator model definition
 
-			//COMBINED
-			new_disldef := PROJECT(discriminator_ldef[2], TRANSFORM(RECORDOF(LEFT),
-																	SELF.predecessors := gen_outputs,
-																	SELF  := LEFT)) + discriminator_ldef[3..];
+			//Changing the inputs of generator to be linked to the outputs and inputs of generator
+			new_disldef := PROJECT(discriminator_ldef, TRANSFORM(RECORDOF(LEFT),
+                                              SELF.predecessors := IF(Str.StartsWith(LEFT.layerName,dis_inputs[1]), 
+                                                                      gen_outputs,
+                                                                      IF(Str.StartsWith(LEFT.layerName,'input_d'),
+                                                                         [Str.FindReplace(LEFT.layerName,'input_d','input_g')],
+                                                                         LEFT.predecessors)),
+                                              SELF:=LEFT
+                                              ));
 
 			//Project this with a transform to remove suffix bracket and add non-trainable feature
 			dis_notrain := PROJECT(new_disldef, TRANSFORM(RECORDOF(LEFT),
-													SELF.layerDef := IF(Str.EndsWith(Str.RemoveSuffix(LEFT.layerDef, ')'), '('),  //If it ends with a ( after removing ), then the function has no parameter
-																		Str.RemoveSuffix(LEFT.layerDef, ')') + 'trainable=False)', //If no parameter, no comma
-																		Str.RemoveSuffix(LEFT.layerDef, ')') + ', trainable=False)'), //If parameter exists, comma is required
-													SELF := LEFT
-													));
+														SELF.layerDef := IF(Str.EndsWith(Str.RemoveSuffix(LEFT.layerDef, ')'), '('),  //If it ends with a ( after removing ), then the function has no parameter
+																			Str.RemoveSuffix(LEFT.layerDef, ')') + 'trainable=False)', //If no parameter, no comma
+																			Str.RemoveSuffix(LEFT.layerDef, ')') + ', trainable=False)'), //If parameter exists, comma is required
+														SELF := LEFT
+														));
 
 			//Get combined layers definition
 			combined_ldef := generator_ldef + dis_notrain;
@@ -152,11 +144,14 @@ EXPORT GAN_FL := MODULE
 				batchPos := RANDOM()%(recordCount/nNodes - batchSize);
 
 				//Extract (batchSize) tensors starting from a random batchPos from the tensor input. Now we have a random input images of (batchSize) rows.
-				X_dat := int.TensExtract(input, batchPos, batchSize);
+				X_dat := int.TensExtract(X_train, batchPos, batchSize);
 
 				//Noise for generator to make fakes
 				random_data1 := makeRandom(epochNum*2);
 				train_noise1 := Tensor.R4.MakeTensor([0,latentDim], random_data1);
+
+				//Predict dataset for generator
+				gen_input := train_noise1 + X_dat(wi>=2);
 
 				//New model IDs
 				loopDiscriminator := discriminator + 3*(epochNum - 1);
@@ -175,7 +170,7 @@ EXPORT GAN_FL := MODULE
 				generator1 := GNNI.SetWeights(loopGenerator, genWts);
 
 				//Predicting using Generator for fake images
-				gen_X_dat := GNNI.Predict(generator1, train_noise1);
+				gen_X_dat := GNNI.Predict(generator1, gen_input);
 
 				//Setting discriminator weights
 				discriminator1 := GNNI.SetWeights(loopDiscriminator, disWts); 
@@ -196,6 +191,9 @@ EXPORT GAN_FL := MODULE
 				random_data2 := makeRandom(epochNum*2 + 1);
 				train_noise2 := Tensor.R4.MakeTensor([0,latentDim], random_data2);
 
+				//Fit dataset for combined
+				com_input := train_noise2 + X_dat(wi>=2);
+
 				//Get discriminator weights, add 20 to it, change discriminator weights of combined model, set combined weights
 				updateddisWts := GNNI.GetWeights(discriminator3);
 				newdisWts := PROJECT(updateddisWts, TRANSFORM(t_Tensor,
@@ -206,7 +204,7 @@ EXPORT GAN_FL := MODULE
 				combined1 := GNNI.SetWeights(loopCombined, comWts);
 
 				//Fit combined model
-				combined2 := GNNI.Fit(combined1, train_noise2, valid, batchSize, 1);
+				combined2 := GNNI.Fit(combined1, com_input, valid + Y_train(wi>=2), batchSize, 1);
 
 				//Get combined weights to return
 				newWts := GNNI.GetWeights(combined2);
