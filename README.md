@@ -44,17 +44,17 @@ This should enable you to use the GAN train function given the dataset appropria
     This test file tries to generate MNIST dataset using mostly Dense layers. This is the most primitive kind of GAN and it shows that the GAN works. The main working file is this. 
     End of this file also has a statement which enables you to run predict as many times as required separately, without requiring you to run the whole program again. 
 
-2. **predictGenTest.ecl**
+2. **PredictTest.ecl**
 
-    This test file is used to predict the saved generator model with different noise types as many times as required. simpleGANtest.ecl and DCGANtest.ecl save their models in a logical file to be able to use for predictions after. 
+    This test file is used to predict the saved generator model with different noise types as many times as required. GANtest.ecl and DCGANtest.ecl save their models in a logical file to be able to use for predictions after. 
 
 3. **DCGANtest.ecl**
 
     This test file is the exact same as simpleGANtest.ecl, but has different layers. They are mostly convolutional neural networks and provide a better output than simple GAN. This shows that the only difference for GANs is the layers and the train function need not be changed at all for different kinds of GANs.
 
-4. **saveGenTest.ecl**
+4. **SaveTest.ecl**
 
-    This test file is a sort of reference for how models are being saved. For any further type of GAN developed, saveTest.ecl may be referred to see how the model is saved easily. 
+    This test file is a sort of reference for how models are being saved. For any further type of GAN developed, SaveTest.ecl may be referred to see how the model is saved easily. 
 
 
 ## Outputs of various models tested
