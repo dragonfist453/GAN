@@ -99,11 +99,10 @@ EXPORT GAN := MODULE
 					SELF.value := 1));
 			valid := Tensor.R4.MakeTensor([0,1],valid_data);
 
-			//Please note: 0.00000001 was used instead of 0 as 0 wasn't read as a tensor data in the backend
 			//Dataset of 0s for classification
 			fake_data := DATASET(batchSize*nNodes, TRANSFORM(TensData,
 					SELF.indexes := [COUNTER, 1],
-					SELF.value := 0.00000001));
+					SELF.value := 0));
 			fake := Tensor.R4.MakeTensor([0,1],fake_data);
 
 			//Get only initial combined weights
